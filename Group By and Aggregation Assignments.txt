@@ -1,0 +1,73 @@
+---Q1. Commission percentage
+select employee_id, round(ifnull(commission_pct, 0),2) as commission_pct
+from employees
+order by employee_id asc
+
+---Q2. Department name
+select employee_id, concat(first_name, " ", last_name) as full_name, salary
+from employees
+where department_id IN ( select department_id from departments where department_name in ('Administration', 'Marketing', 'Human Resources'))
+order by employee_id asc
+
+---Q4. Employee 107
+select concat(first_name, " ", last_name) as full_name, salary, department_id, job_id
+from employees
+where job_id = (select job_id from employees where employee_id = 107)
+order by full_name asc
+
+---Q6. Accountant
+select employee_id, first_name, last_name, salary,
+if (lower(job_id) IN ('FI_ACCOUNT', 'AC_ACCOUNT'),1,0) as Accountant
+from employees
+order by employee_id asc
+
+---Q5. Salary Bins
+select employee_id, salary,
+case    when salary > 20000 then 'Class A'
+        when salary between 10000 and 20000 then 'Class B'
+        when salary < 10000 then 'Class C'
+end    as Salary_bin
+from employees
+order by employee_id asc
+
+---Q3. No Job history
+select *
+from employees
+where employee_id not in (select employee_id from job_history)
+order by employee_id asc
+
+---Q7. Judgement of Triangle
+select *, if (x+y>z and x+z>y and y+z>x, 'Yes', 'No')  as triangle
+from triangle
+order by x,y,z asc
+
+---Q8. Western Longitudes
+SELECT round(sum(long_w),4) as sum
+from station
+where long_w > 38.7880 and long_w < 137.2345
+
+---Q3. Rich Customers
+select *
+from employees
+where employee_id not in (select employee_id from job_history)
+order by employee_id asc
+
+
+---Q1. Missing Data
+select employeeNumber, firstName, lastName, ifnull (email, 'N/A') as email, 
+ifnull (phone, 'N/A') as phone
+from employees
+
+---Q2. Seattle
+SELECT employee_id, first_name, last_name, job_id
+FROM employees
+where department_id IN 
+(SELECT department_id 
+from departments 
+where location_id = 
+(SELECT location_id
+FROM locations
+where city = 'Seattle')
+)
+order by employee_id asc
+
