@@ -1,0 +1,60 @@
+Q2. Top 5 popular movies
+select original_title, tagline, director
+from movies
+order by popularity desc
+limit 5;
+
+
+Q3. Third highest revenue
+select * 
+from movies
+order by revenue desc
+limit 1
+offset 2
+
+Q4. Weighted avg rating
+select original_title, round(((vote_count/(vote_count+104)*vote_average) + (104/(104+vote_count)*5.97)),2) as Weighted_avg_rating
+from movies
+order by Weighted_avg_rating desc, original_title asc
+limit 10
+
+Q5. Book Description
+select concat("Book Name:",book_name,",Author:",author,",Book price:",book_price) as Book_Description
+from books
+order by Book_Description
+
+Q6. New Salary
+select emp_id, name, salary, round(salary*1.2) as New_salary
+from employees
+order by emp_id asc
+
+Q7. 4th & 5th Highest
+select employee_number, first_name, last_name, salary
+from employees
+order by salary desc
+limit 2
+offset 3
+
+Q8. Japanese Cities
+select * 
+from city
+where countrycode = 'JPN'
+order by id asc
+
+Additional Assignments
+
+Q1. Movies profit
+select original_title, round(((revenue-budget)*100)/budget,2) as Profit_percentage
+from movies
+
+Q2. Transform Employee Name
+select employee_number,
+CONCAT( UPPER(SUBSTRING(first_name,1,1)),LOWER(SUBSTRING(first_name,2,LENGTH(first_name))), ' ' , LOWER(last_name) ) as "Full Name"
+from employees
+order by employee_number asc
+
+Q3. Higher Than 75 Marks
+select name
+from students
+where marks > 75
+order by name, id asc
