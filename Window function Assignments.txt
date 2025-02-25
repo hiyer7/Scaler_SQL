@@ -1,0 +1,119 @@
+Q1. Matches of the League
+
+select t1.team_name as home_team, 
+	   t2.team_name as away_team
+from teams t1
+join teams t2
+where t1.team_name != t2.team_name
+order by home_team, away_team
+
+Q2. Second Degree Follower
+select distinct followee as follower, num
+from
+(select *,
+        count(follower) over (partition by followee) as num
+from follow) tbl
+where followee in (select follower from follow)
+and num >= 1
+order by follower
+
+Q3. Order Two Columns Independently
+select first_col, second_col
+from
+(select first_col,
+	   row_number() over (order by first_col asc) as col_row_number
+from data) tbl1
+Join
+(select second_col,
+	   row_number() over (order by second_col desc) as col_row_number
+from data) tbl2
+using (col_row_number);
+
+Q4. 5th highest
+
+
+select employee_id, first_name, job_id
+from
+(select *,
+        dense_rank() over (partition by job_id order by salary desc) as emp_dense_rank
+from employees) tbl
+where emp_dense_rank = 5
+order by employee_id
+
+Q5. Ranks for Scores
+
+select score, rnk as 'rank'
+from
+(select *,
+        dense_rank() over(order by score desc) as rnk
+from scores) tbl
+order by score desc
+
+Q6. Department wise salary analysis
+
+select concat(first_name, ' ', last_name) as full_name, department_id, salary, emp_row_no, emp_rank, emp_dense_rank
+from 
+(select *,
+        row_number() over (partition by e.department_id order by salary desc) as emp_row_no,
+        rank() over (partition by e.department_id order by salary desc) as emp_rank,
+        dense_rank() over (partition by e.department_id order by salary desc) as emp_dense_rank
+from employees e) tbl
+order by department_id, salary desc
+
+Q7. Salaries after taxes
+
+select s.company_id, employee_id, employee_name, round((salary - salary * (tax_rate / 100)),0) as salary
+from salaries s
+
+left join
+
+(select company_id,
+        case
+            when max(salary) < 1000 then 0
+            when max(salary) between 1000 and 10000 then 24
+            when max(salary) > 10000 then 49
+        end 
+        as tax_rate
+from salaries
+group by company_id) tax_tbl
+
+using (company_id)
+
+order by s.company_id, employee_id
+
+Additional Assignments
+Q1. Less salary
+select employee_id, first_name, last_name, department_id, salary
+from 
+(
+    select *, 
+            avg(salary) over (partition by department_id) as avg_salary
+    from EMPLOYEES
+) tbl
+where salary < avg_salary
+order by employee_id
+
+Q2. The Most Recent Three Orders
+
+select name as customer_name, customer_id, order_id, order_date
+from
+(select *,
+		row_number() over (partition by customer_id order by order_date desc) as rown
+from
+(select c.customer_id as customer_id, c.name, order_id as order_id, order_date, cost
+from customers c
+join orders o
+on c.customer_id = o.customer_id) as tbl1) as tbl2
+where rown <=3
+order by customer_name, customer_id, order_date desc
+
+Q3. Same salaries
+
+select employee_id, name, salary,
+		dense_rank() over (order by salary asc) as team_id
+from (
+select *,
+		count(employee_id) over(partition by salary) as sal_buckets
+from employees) sal_bucket_tbl
+where sal_buckets > 1
+order by team_id, employee_id
