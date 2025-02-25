@@ -1,0 +1,199 @@
+Q1.Europe
+/* YOUR QUERY GOES HERE
+   Example: SELECT * FROM employees; 
+*/
+select employee_id, concat(first_name, ' ',last_name) as full_name, e.salary, e.phone_number, e.department_id, d.department_name, l.street_address, l.city, c.country_name, r.region_id, r.region_name
+from employees e
+join
+departments d 
+on e.department_id = d.department_id
+
+join locations l
+on d.location_id = l.location_id
+
+join countries c
+on l.country_id = c.country_id
+
+join regions r
+on c.region_id = r.region_id
+where r.region_name = "Europe"
+
+order by salary desc, employee_id
+
+Q7. Chemical Bond
+select m.symbol as metal , non.symbol as nonmetal
+from elements m
+join elements non
+where m.type = 'Metal' and non.type = 'Nonmetal'
+order by metal, nonmetal
+
+Should be approached using cross join.
+select m.symbol as metal , non.symbol as nonmetal
+from elements m
+cross join elements non
+where m.type = 'Metal' and non.type = 'Nonmetal'
+order by metal, nonmetal
+
+Q2. Job like sales
+/* YOUR QUERY GOES HERE
+   Example: SELECT * FROM employees; 
+*/
+'employee_id', 'department_name', 'job_id', 'job_title','min_salary'.
+
+
+select *
+from 
+(select *
+from jobs j
+join job_history jh
+using (job_id)
+where j.job_title like '%sales%') as t_tbl
+using (job_id)
+where min_salary > 6000) as e_tbl
+join 
+departments d
+using (department_id)
+
+select e.employee_id, e.department_id, e.job_id, t_tbl.job_title, t_tbl.min_salary
+from employees e
+join 
+departments d
+using (department_id)
+join
+jobs j
+using (job_id)
+join
+job_history jh
+using (job_id)
+where jh.job_title like '%sales%'
+and jh.min_salary > 6000
+
+
+Q5. Salary > 40%
+select concat(first_name, ' ',last_name) as full_name#,e.department_id, e.salary, tbl.fourty
+from employees e
+left join
+(select department_id,
+       sum(salary)*0.4 as fourty
+from employees
+group by department_id) as tbl
+#on e.employee_id = tbl.employee_id
+on e.department_id = tbl.department_id
+where e.salary > tbl.fourty
+or e.department_id is null
+order by full_name
+
+select concat(first_name, ' ',last_name) as full_name
+from
+(
+    select *,
+	   (sum(salary) over(partition by department_id))*0.4 as fourty
+from employees) tbl
+where salary > fourty
+order by full_name
+
+
+
+
+select metal from (select symbol as metal
+from elements
+where type = 'Metals') as Mtable
+cross join
+select nonmetal from (select symbol as nonmetal
+from elements
+where type != 'Metals') as NMetal
+*/
+
+select employee_id
+from employees e
+left join employees m
+on e.managerid = m.employeeid
+
+Q6. Shortest distance
+select min(distance) as shortest
+from
+(select *,
+        round(sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)),2) as distance
+from
+(select p1.x as x1, p1.y as y1, p2.x as x2, p2.y as y2 
+from points p1 
+join points p2) points_tbl1
+) points_tbl2
+where distance != 0
+
+Q3. Manager left
+select e.employee_id
+from employees e
+left join employees m
+on e.manager_id = m.employee_id
+where m.employee_id is null and e.manager_id is not null
+order by e.employee_id
+
+select employee_id
+from employees
+where manager_id not in
+(select employee_id from employees)
+and salary < 15000
+order by employee_id
+
+#Q4. No. of employees
+select distinct d.department_name, count(employee_id)over(partition by d.department_id) as No_of_Employees, sum(salary)over(partition by d.department_id) as Total_Salary
+FROM employees e
+right join
+departments d 
+on e.department_id = d.department_id
+order by d.department_name 
+
+Q7. Chemical Bond
+select m.symbol as metal , non.symbol as nonmetal
+from elements m
+cross join elements non
+where m.type = 'Metal' and non.type = 'Nonmetal'
+order by metal, nonmetal
+
+
+Q8. Banned Accounts
+select distinct l1.account_id
+from loginfo l1
+join loginfo l2
+where l1.login <= l2.logout
+and l2.login <= l1.logout
+and l1.ip_address != l2.ip_address
+and l1.account_id = l2.account_id
+order by l1.account_id
+
+
+
+Additional Assignments:
+Q1. Sales Person
+select distinct s.name#, c.name
+from salesperson s 
+left join orders o 
+on s.sales_id = o.sales_id
+
+left join company c 
+on o.com_id = c.com_id
+
+where lower(c.name) not like '%red%'
+or lower(c.name) is null
+order by s.name
+
+
+Q2. Joined first
+select e.employee_id, e.first_name, e.last_name
+from employees e
+left join employees m
+on e.manager_id = m.employee_id 
+
+where e.hire_date < m.hire_date
+order by e.employee_id
+
+Q3. Products Recommendation
+select o.customer_id,customer_name
+from  orders o
+join customers c
+on o.customer_id = c.customer_id
+where o.customer_id not in (select customer_id from orders where product_name = "Eggs") 
+group by o.customer_id, customer_name
+having count(product_name)= 2
+order by customer_name
