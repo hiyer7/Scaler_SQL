@@ -1,0 +1,115 @@
+--Q1. 28 years
+select employee_id, first_name, last_name,
+       round((datediff('2022-06-08', hire_date)/365),2) as Total_years
+from employees
+where (datediff('2022-06-08', hire_date)/365) >= 28
+order by employee_id
+
+--Q2. Day, Month, Year
+select employee_id, first_name, last_name, salary, hire_date, 
+       extract(day from hire_date) as Day, 
+       extract(month from hire_date) as Month, 
+       extract(year from hire_date) as Year 
+from employees 
+where salary > 5000
+and extract(month from hire_date) = '01'
+and extract(year from hire_date) = '2000'
+order by 1
+
+select employee_id, 
+       first_name, 
+       last_name, 
+       salary, 
+       hire_date, 
+       day(hire_date) as 'Day', 
+       Month(hire_date) as 'Month', 
+       Year(hire_date) as 'Year' 
+from employees
+where  salary >= 5000
+and Month(hire_date) = 1
+and Year(hire_date) = 2000
+order by employee_id
+
+--Q6. FB comments
+select user_id,
+       sum(number_of_comments) as comments_count
+from fb_comments
+where created_at between date_sub('2020-02-10', interval 30 day) and '2020-02-10'
+group by 1
+order by 1
+
+
+--Q7. 25 yrs experience
+select employee_id, first_name, last_name, salary, department_name,      
+       round(datediff('2022-06-08', hire_date)/365,4) as  Experience
+from employees e
+join departments m
+using (department_id) 
+where e.employee_id in
+(select manager_id
+from employees)
+and datediff('2022-06-08', hire_date)/365 >= 25
+order by employee_id
+
+--Q8. Six months
+select employee_id, first_name, last_name, salary, hire_date, department_id
+from
+(select employee_id, first_name, last_name, salary, hire_date, department_id,
+            max(salary) over(partition by department_id) as max_salary
+from employees
+where hire_date between date_sub('1998-01-01', interval 6 month) and '1998-01-01') tbl
+where salary = max_salary
+order by 6, 1
+
+--Q4. Three months
+select 
+employee_id, first_name, last_name, salary, department_name, hire_date, city
+from employees
+join departments
+using (department_id)
+
+join locations
+using (location_id)
+
+where employee_id in
+(select 
+employee_id
+from employees
+where hire_date between '1998-01-01' and date_add('1998-01-01', interval 90 day))
+order by employee_id
+
+
+
+--Q5. Fix Product Name Format
+select lower(trim(product_name)) as product_name,
+       date_format(sale_date, '%Y-%m') as sale_date,
+       count(*) as total
+from sales
+group by 1, 2
+order by 1, 2
+
+
+Additional Assignments
+
+--Q3. Needed hours
+select employee_id
+from 
+(select e.employee_id, needed_hours, hours
+from
+employees e 
+join
+(select employee_id, ceil((sum(ceil((timestampdiff(second, in_time, out_time)/60))))/60) as hours
+from logs
+group by 1) tbl
+using (employee_id)
+) tbl1
+where needed_hours > hours
+order by employee_id
+
+--Q1. Extract year
+select year(hire_date) as Year, count(*) as Employees_count
+from employees
+group by 1
+order by 2 desc, 1 asc
+
+--Q2. Request Confirmation Messages
