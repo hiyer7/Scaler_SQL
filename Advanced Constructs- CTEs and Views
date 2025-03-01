@@ -1,0 +1,218 @@
+---Q1. Net Salary I
+with net_sal_cte as 
+(select employee_id, first_name, last_name,
+        salary, salary+(salary*(coalesce(commission_pct, 0))) as net_salary
+from employees)
+
+select * 
+from net_sal_cte 
+where net_salary > 15000
+order by employee_id 
+
+
+---Q2. Selected Seniors and Juniors
+with senior_running_salary as
+(select *,
+		sum(salary) over (order by salary asc) as s_r_salary
+from candidates
+where experience = "Senior"
+order by salary),
+
+junior_running_salary as
+(select *,
+		sum(salary) over (order by salary asc) as j_r_salary
+from candidates
+where experience = "Junior"
+order by salary),
+
+within_7000_senior as
+(
+select employee_id,
+	   experience,
+       salary,
+       sum(salary) over(order by salary asc) as within_7000_senior_salary_running
+from senior_running_salary
+where s_r_salary < 70000
+),
+
+within_7000_junior as
+(
+select * 
+from junior_running_salary
+where j_r_salary < 70000-(select max(within_7000_senior_salary_running) from within_7000_senior)
+)
+
+select employee_id from within_7000_senior
+union
+select employee_id from within_7000_junior
+order by employee_id
+
+
+---Q3. Employees with missing info
+with emp_sal_cte as
+(
+select employees.employee_id, name, salary
+from employees
+left join
+salaries
+on employees.employee_id = salaries.employee_id),
+
+sal_emp_cte as
+(
+select salaries.employee_id, name, salary
+from employees
+right join
+salaries
+on employees.employee_id = salaries.employee_id)
+
+select employee_id
+from 
+emp_sal_cte
+where salary is null
+union
+select employee_id
+from 
+sal_emp_cte
+where name is null
+
+order by employee_id
+
+---Q4. Rearranging Products
+create view store1_products as
+(select product_id, 
+'store1' as store,
+store1 as price
+from Products
+where store1 is not null);
+
+create view store2_products as
+(select product_id, 
+'store2' as store,
+store2 as price
+from Products
+where store2 is not null);
+
+create view store3_products as
+(select product_id, 
+'store3' as store,
+store3 as price
+from Products
+where store3 is not null);
+
+select * from 
+store1_products
+
+union 
+select * from 
+store2_products
+
+union
+
+select * from 
+store3_products
+order by product_id, store
+
+--Q5
+
+---Q6. Manager details
+create view manager_salary as
+(select employee_id, concat(first_name, ' ', last_name) as Manager,
+       salary,
+       department_name,
+       city,
+       country_name
+from employees e
+join departments d
+on e.department_id = d.department_id
+
+join locations l 
+on d.location_id = l.location_id
+
+join countries c 
+on c.country_id = l.country_id 
+
+where employee_id in 
+(select manager_id from employees));
+
+select employee_id, 
+       Manager,
+       salary,
+       department_name,
+       city,
+       country_name
+from (
+select *,
+        dense_rank() over (order by salary desc) as salary_rnk
+from manager_salary) tbl
+where salary_rnk<=5
+order by salary desc, Manager
+
+---Q7. Salary Decile
+select *,
+		ntile(10) over (order by avg_salary desc) as salary_decile
+from
+(
+select department_name, 
+	    avg(salary) as avg_salary#over (partition by department_name order by salary desc) 
+from employees
+join departments
+using (department_id)
+group by 1
+) tbl
+order by avg_salary desc, salary_decile asc
+
+
+Additional Assignments
+---Q1. Most frequently bought
+with customer_product_cte as
+(
+select customer_id,
+        product_id,
+        count(*) as repeat_orders
+ #over (partition by customer_id, product_id)rom orders
+from orders
+group by 1, 2
+order by 1, 2 asc, 3 desc),
+
+ranking_customer as 
+(
+    select *,
+            dense_rank() over (partition by customer_id order by repeat_orders desc) as rank_orders
+    from customer_product_cte
+)
+
+select customer_id,
+       rc.product_id,
+       product_name 
+from ranking_customer rc
+join products p
+on p.product_id = rc.product_id
+where rank_orders = 1
+order by customer_id, product_id
+
+---Q2. Emp view
+create view emp_view as 
+(
+SELECT  employee_id, 
+        first_name, 
+        last_name, 
+        salary, 
+        d.department_id, 
+        department_name, 
+        d.location_id, 
+        street_address, 
+        city
+from employees e 
+left join departments d 
+using (department_id)
+
+left join locations l 
+using (location_id)
+
+left join countries c 
+using(country_id));
+
+select * 
+from emp_view
+where city in ("Seattle" ,"Southlake")
+order by employee_id
