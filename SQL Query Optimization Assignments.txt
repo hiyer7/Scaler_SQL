@@ -1,0 +1,89 @@
+Q8. Quartile
+select employee_id, first_name, department_id, job_id, salary,
+        ntile(4) over (order by salary asc) as Quartile
+from employees
+order by Quartile, salary, employee_id
+
+
+Q5. Less than a year
+select employees.employee_id,
+        concat (first_name, " ", last_name) as full_name,
+        job_title
+from employees
+join job_history
+using (employee_id)
+join jobs
+on jobs.job_id = job_history.job_id
+where timestampdiff(month, start_date, end_date) < 12
+order by employee_id, job_title
+
+
+Q2. Convert Date Format
+select date_format(day, '%W, %M %d, %Y') as day
+from days
+order by day asc
+
+
+Q4. Students in Departments
+select distinct dept_name,
+       count(student_id) over (partition by dept_name) as student_number
+from student
+join department
+using (dept_id)
+order by 2
+
+Q6. Latest Login(2020)
+select distinct user_id,
+       max(time_stamp) over (partition by user_id) as last_stamp
+from logins
+where extract(year from time_stamp) = 2020
+order by user_id
+
+Q7. Order date (30 days)
+select orderNumber,
+        orderdate,
+        date_add(orderdate, interval 30 day) as order_date_plus_30_days
+from orders
+order by orderNumber
+
+---Additional Assignments:
+
+Q1. Market Analysis I
+with order_2019 as (
+select buyer_id,
+        count(*) as orders_in_2019
+from orders
+where extract(year from order_date) = 2019
+group by 1)
+
+select user_id as buyer_id,
+       join_date,
+       if(orders_in_2019 is null, 0, orders_in_2019) as orders_in_2019
+from users
+left join order_2019
+on users.user_id = order_2019.buyer_id
+order by 1
+
+Q2. New Users Daily Count
+with min_date_cte as (
+select  user_id,
+        activity_date as login_date,
+       min(activity_date) over (partition by user_id) as min_date
+from traffic
+where activity = "login"
+),
+
+min_activity_date as (
+select * 
+from min_date_cte
+where login_date = min_date)
+
+-- select * from min_activity_date
+-- order by login_date;
+
+select login_date,
+        count(user_id) as user_count
+from min_activity_date
+where timestampdiff(day, login_date, '2019-06-30') <=90 
+group by 1
+order by 1
