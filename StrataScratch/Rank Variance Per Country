@@ -1,0 +1,23 @@
+with month_wise_count_cte as
+( 
+
+select country, 
+        sum(case when date_format(created_at, '%m-%y') = '12-19' then 1 else 0 end) as dec_count,
+        sum(case when date_format(created_at, '%m-%y') = '01-20' then 1 else 0 end) as jan_count
+        from
+fb_comments_count
+join fb_active_users
+using (user_id)
+group by 1),
+
+dense_ranked_countries as
+(
+    select country,
+            dense_rank() over (order by dec_count desc) as dec_rank,
+            dense_rank() over (order by jan_count desc) as jan_rank
+            from month_wise_count_cte
+)
+
+select country
+       from dense_ranked_countries
+       where jan_rank<dec_rank
