@@ -1,0 +1,25 @@
+#select * from facebook_web_log;
+
+#select  date_format(timestamp, '%h-%m-%s' ) from facebook_web_log limit 5;
+
+with vg_cte as(
+    select user_id, date(timestamp) as session_date, 
+           max(case when action='page_load' then timestamp end) as max_page_load_time,
+           min(case when action='page_exit' then timestamp end) as min_page_exit_time
+           from facebook_web_log
+           group by 1, date(timestamp)
+),
+
+session_durations AS (
+    SELECT 
+        user_id,
+        TIMESTAMPDIFF(SECOND, max_page_load_time, min_page_exit_time) AS session_duration_seconds
+    FROM vg_cte
+    WHERE max_page_load_time < min_page_exit_time
+)
+
+SELECT 
+    user_id,
+    ROUND(AVG(session_duration_seconds), 2) AS avg_session_duration_seconds
+FROM session_durations
+GROUP BY user_id;
