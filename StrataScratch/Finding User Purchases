@@ -1,0 +1,20 @@
+WITH ranked_purchases AS (
+    SELECT 
+        user_id,
+        created_at,
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at) AS rn
+    FROM amazon_transactions
+),
+first_and_second AS (
+    SELECT 
+        user_id,
+        MAX(CASE WHEN rn = 1 THEN created_at END) AS first_purchase,
+        MAX(CASE WHEN rn = 2 THEN created_at END) AS second_purchase
+    FROM ranked_purchases
+    WHERE rn <= 2
+    GROUP BY user_id
+)
+SELECT user_id
+FROM first_and_second
+WHERE second_purchase IS NOT NULL
+  AND TIMESTAMPDIFF(DAY, first_purchase, second_purchase) BETWEEN 1 AND 7;
