@@ -1,0 +1,19 @@
+#select * from fb_friend_requests;
+with lead_action_cte as
+(
+select user_id_sender, user_id_receiver, 
+       date, action,
+       lead(date,1) over(partition by user_id_sender, user_aid_receiver order by date) as lead_date,
+       lead(action,1) over(partition by user_id_sender, user_id_receiver order by date) as lead_action
+from fb_friend_requests
+),
+vg_cte as
+(select date,
+    sum(case when action='sent' and lead_action= 'accepted' then 1 else 0 end)/
+    sum(case when action='sent' then 1 else 0 end) as acceptance_rate
+from lead_action_cte
+group by 1)
+
+select date, acceptance_rate
+from vg_cte
+where acceptance_rate is not null
