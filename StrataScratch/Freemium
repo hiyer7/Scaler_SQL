@@ -1,0 +1,20 @@
+
+#select * from ms_user_dimension;
+with joined_tbl_cte as
+(
+select user_id, date, paying_customer, downloads
+from ms_user_dimension 
+join ms_acc_dimension
+using (acc_id)
+join ms_download_facts
+using (user_id)),
+
+vg_cte as
+(select date,
+        sum(case when paying_customer= 'yes' then downloads end) as paying_downloads,
+        sum(case when paying_customer= 'no' then downloads end) as non_paying_downloads
+from joined_tbl_cte
+group by 1)
+
+select * from vg_cte
+where non_paying_downloads > paying_downloads
