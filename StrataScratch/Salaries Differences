@@ -1,0 +1,5 @@
+#select * from db_dept;
+select abs(max(case when department='engineering' then salary end) - max(case when department='marketing' then salary end))
+from db_employee
+join db_dept
+on db_employee.department_id = db_dept.id
