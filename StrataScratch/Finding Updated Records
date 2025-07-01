@@ -1,0 +1,4 @@
+#select * from ms_employee_salary;
+select id, first_name, last_name, department_id, max(salary) as current_salary
+from ms_employee_salary
+group by 1, 2, 3
