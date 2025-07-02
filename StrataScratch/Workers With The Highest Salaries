@@ -1,0 +1,19 @@
+with max_salary_cte as
+
+(
+    select worker_title, max(salary) as max_sal_title
+    from title join worker
+    on title.worker_ref_id = worker.worker_id
+    group by worker_title
+),
+
+rank_cte as
+(
+    select worker_title,
+           dense_rank() over (order by max_sal_title desc) as rnk
+    from max_salary_cte
+)
+
+select worker_title
+from rank_cte 
+where rnk = 1
