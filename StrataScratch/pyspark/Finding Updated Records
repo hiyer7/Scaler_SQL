@@ -1,0 +1,8 @@
+import pyspark
+
+max_salary= db_emp_salary.groupBy('id').agg(max('salary').alias('current_salary'))
+
+joined_df= max_salary.join(db_emp_salary, on= 'id', how= 'inner').filter('salary==current_salary')
+
+result= joined_df.select('id', 'fname', 'sname', 'salary')
+result.toPandas()
