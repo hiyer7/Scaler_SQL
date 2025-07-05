@@ -11,4 +11,4 @@ max_df= max_salary.groupBy().pivot('department').agg({'max_salary':'max'})
 
 result= max_df.select(abs(col('engineering') - col('marketing')))
 
-result.to_pandas()
+return result.to_pandas()
