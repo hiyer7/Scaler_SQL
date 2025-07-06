@@ -1,0 +1,16 @@
+# Import your libraries
+from pyspark.sql.functions import max, col, dense_rank
+from pyspark.sql.window import Window
+
+# Start writing code
+joined_df= worker.join(title, worker.worker_id==title.worker_ref_id)
+
+grouped_df= joined_df.groupby('worker_title').agg(max(col('salary')).alias('max_salary'))
+
+window_max= Window.orderBy(col('max_salary').desc())
+
+ranked_df= grouped_df.withColumn('rank', dense_rank().over(window_max))
+
+result= ranked_df.filter(col('rank')==1).select('worker_title')
+# To validate your solution, convert your final pySpark df to a pandas df
+result.toPandas()
