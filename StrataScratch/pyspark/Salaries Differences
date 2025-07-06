@@ -1,14 +1,13 @@
-import pyspark
 from pyspark.sql.functions import max, col, abs
 
-joined_df= db_emp.join(db_dept, db_emp.department_id == db_dept.id)
+filtered_df= db_dept.filter(col('department').isin('engineering', 'marketing'))
 
-filtered_df= joined_df.filter('department').isin('engineering', 'marketing')
+joined_df= filtered_df.join(db_employee, db_employee.department_id== filtered_df.id)
 
-max_salary= filtered_df.groupBy('department').agg(max('salary').alias(max_salary))
+max_sal_df= joined_df.groupby('department).agg(max('salary').alias('max_salary'))
 
-max_df= max_salary.groupBy().pivot('department').agg({'max_salary':'max'})
+pivoted_df= max_sal_df.groupby().pivot('department').agg({'max_salary':'max'})
 
-result= max_df.select(abs(col('engineering') - col('marketing')))
+pivoted_df.select(abs(col('engineering')-col('marketing')))
 
 return result.to_pandas()
