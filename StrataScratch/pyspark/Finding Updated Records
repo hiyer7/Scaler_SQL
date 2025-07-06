@@ -1,8 +1,23 @@
-import pyspark
+from pyspark.sql.functions import max, col
 
-max_salary= db_emp_salary.groupBy('id').agg(max('salary').alias('current_salary'))
+# Alias both DataFrames
+emp_df = ms_employee_salary.alias("emp")
+max_df = ms_employee_salary.groupBy("id").agg(max("salary").alias("max_salary")).alias("max_sal")
 
-joined_df= max_salary.join(db_emp_salary, on= 'id', how= 'inner').filter('salary==current_salary')
+# Join using aliases and unambiguous column references
+joined_df = max_df.join(
+    emp_df,
+    (col("emp.id") == col("max_sal.id")) & (col("emp.salary") == col("max_sal.max_salary"))
+)
 
-result= joined_df.select('id', 'fname', 'sname', 'salary')
-return result.toPandas()
+# Select desired columns from aliases
+final_df = joined_df.select(
+    col("emp.id"),
+    col("emp.first_name"),
+    col("emp.last_name"),
+    col("emp.department_id"),
+    col("max_sal.max_salary")
+)
+
+# Optional: convert to Pandas
+return final_df.toPandas()
