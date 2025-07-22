@@ -1,0 +1,7 @@
+from pyspark import max, col
+
+result_df= dc_bikeshare_q1_2012.groupby('bike_number').agg(max(col('end_time')).alias('last_used_time')
+
+result_df= result_df.orderBy(col('last_used_time').desc())
+
+result_df
